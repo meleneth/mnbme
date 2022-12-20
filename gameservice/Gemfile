@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# gem "rails"
+
+gem "rack", "= 3.0.2"
+
+gem "rackup", "~> 0.2.2"
+
+gem "redis"
+
+gem 'random_name_generator'

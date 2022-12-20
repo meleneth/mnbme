@@ -1,0 +1,116 @@
+---
+version: '3.8'
+services:
+  gameredis:
+    image: redis:7.0.5-alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass gameredis_password
+    environment: []
+    ports:
+    - 20000:6379
+    volumes:
+    - "./data/gameredis:/data"
+  accountservice:
+    image: melen/accountservice
+    ports:
+    - 20100:9292
+    environment:
+    - REDIS_HOST=gameredis
+    - REDIS_PORT=6379
+    - REDIS_PASSWORD=gameredis_password
+    build:
+      context: "./accountservice"
+    links:
+    - gameredis
+    depends_on:
+    - gameredis
+  gameservice:
+    image: melen/gameservice
+    ports:
+    - 20200:9292
+    environment:
+    - REDIS_HOST=gameredis
+    - REDIS_PORT=6379
+    - REDIS_PASSWORD=gameredis_password
+    build:
+      context: "./gameservice"
+    links:
+    - gameredis
+    - accountservice
+    - achievementservice
+    depends_on:
+    - gameredis
+    - accountservice
+    - achievementservice
+  achievementservice:
+    image: melen/achievementservice
+    ports:
+    - 20300:9292
+    environment:
+    - REDIS_HOST=gameredis
+    - REDIS_PORT=6379
+    - REDIS_PASSWORD=gameredis_password
+    build:
+      context: "./achievementservice"
+    links:
+    - gameredis
+    depends_on:
+    - gameredis
+  bigboard:
+    image: melen/bigboard
+    ports:
+    - 20400:9292
+    environment: []
+    build:
+      context: "./bigboard"
+    links:
+    - accountservice
+    - gameservice
+    - achievementservice
+    depends_on:
+    - accountservice
+    - gameservice
+    - achievementservice
+  playerservice: &playerservice
+    image: melen/playerservice
+    environment: []
+    build:
+      context: "./playerservice"
+    links:
+    - accountservice
+    - gameservice
+    depends_on:
+    - accountservice
+    - gameservice
+  player2service:
+    <<: *playerservice
+  player3service:
+    <<: *playerservice
+  player4service:
+    <<: *playerservice
+  player5service:
+    <<: *playerservice
+  player6service:
+    <<: *playerservice
+  player7service:
+    <<: *playerservice
+  player8service:
+    <<: *playerservice
+  player9service:
+    <<: *playerservice
+  player10service:
+    <<: *playerservice
+  player11service:
+    <<: *playerservice
+  player12service:
+    <<: *playerservice
+  player13service:
+    <<: *playerservice
+  player14service:
+    <<: *playerservice
+  player15service:
+    <<: *playerservice
+  player16service:
+    <<: *playerservice
+  player17service:
+    <<: *playerservice

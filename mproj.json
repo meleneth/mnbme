@@ -1,0 +1,84 @@
+{
+  "projects": [
+    {
+      "name": "gameredis",
+      "type": "redis",
+      "attributes": {
+      },
+      "options": [
+
+      ],
+      "links": [
+
+      ]
+    },
+    {
+      "name": "accountservice",
+      "type": "rack",
+      "attributes": {
+      },
+      "options": [
+
+      ],
+      "links": [
+        "gameredis"
+      ]
+    },
+    {
+      "name": "gameservice",
+      "type": "rack",
+      "attributes": {
+      },
+      "options": [
+
+      ],
+      "links": [
+        "gameredis",
+        "accountservice",
+        "achievementservice"
+      ]
+    },
+    {
+      "name": "achievementservice",
+      "type": "rack",
+      "attributes": {
+      },
+      "options": [
+
+      ],
+      "links": [
+        "gameredis"
+      ]
+    },
+    {
+      "name": "bigboard",
+      "type": "rack",
+      "attributes": {
+      },
+      "options": [
+
+      ],
+      "links": [
+        "accountservice",
+        "gameservice",
+        "achievementservice"
+      ]
+    },
+    {
+      "name": "playerservice",
+      "type": "rack",
+      "attributes": {
+      },
+      "options": [
+
+      ],
+      "links": [
+        "accountservice",
+        "gameservice"
+      ]
+    }
+  ],
+  "username": "melen",
+  "starting_port_no": 10000,
+  "port_gap": 100
+}

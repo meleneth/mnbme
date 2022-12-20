@@ -1,0 +1,24 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    connection_pool (2.3.0)
+    rack (3.0.2)
+    rackup (0.2.2)
+      rack (>= 3.0.0.beta1)
+      webrick
+    redis (5.0.5)
+      redis-client (>= 0.9.0)
+    redis-client (0.11.2)
+      connection_pool
+    webrick (1.7.0)
+
+PLATFORMS
+  x64-mingw-ucrt
+
+DEPENDENCIES
+  rack (= 3.0.2)
+  rackup (~> 0.2.2)
+  redis
+
+BUNDLED WITH
+   2.3.16

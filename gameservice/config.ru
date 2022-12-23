@@ -73,11 +73,11 @@ class RedisConnectedBase
   end
 
   def game_uuid
-    @game_uuid ||= request.params["game_uuid"]
+    request.params["game_uuid"]
   end
 
   def player_uuid
-    @player_uuid = request.params["player_uuid"]
+    request.params["player_uuid"]
   end
 
   def redis
@@ -92,21 +92,23 @@ end
 
 class MakeNumberBiggerGame < RedisConnectedBase
   def do_turn
-    @result = redis.decr game_number_key(game_uuid)
-    if @result == 0
+    @game_uuid = request.params["game_uuid"]
+    @health_result = redis.decr game_number_key(@game_uuid)
+    if @health_result == 0
       # we got the killing blow!  shut the game down.
-      redis.lrem running_games_list_key, -1, game_uuid
+      redis.lrem running_games_list_key, -1, @game_uuid
       @game_uuid = "closed"
-    elsif @result < 0
+    elsif @health_result < 0
       @game_uuid = "closed"
     end
   end
   def response
     do_turn
+    puts "#{@game_uuid} -> tick(#{@health_result})"
     [
       200,
       { "content-type" => "application/json" },
-      [ {number: @result, game_uuid: game_uuid}.to_json ]
+      [ {number: @health_result, game_uuid: @game_uuid}.to_json ]
     ]
   end
 end
@@ -136,37 +138,44 @@ end
 
 class JoinGame < RedisConnectedBase
   def monster_name
-    rng = RandomNameGenerator.new
+    rng = RandomNameGenerator.new(RandomNameGenerator::ROMAN)
     "#{rng.compose(3)} #{rng.compose(3)} #{rng.compose(3)}"
+  rescue
+    retry # sigh
   end
   def make_new_game
     @game_uuid = SecureRandom.uuid
-    puts "player #{player_uuid} Making a new game #{game_uuid}"
-    redis.set game_name_key(game_uuid), monster_name
-    redis.set game_number_key(game_uuid), 2000 # low numbers to start
-    redis.set game_max_number_key(game_uuid), 2000 # low numbers to start
-    redis.set game_entries_key(game_uuid), 6 # low numbers to start
-    redis.lpush open_games_list_key, game_uuid
-    redis.lpush running_games_list_key, game_uuid
-    redis.lpush game_players_key(game_uuid), player_uuid
+    puts "player #{player_uuid} Making a new game #{@game_uuid}"
+    redis.set game_name_key(@game_uuid), monster_name
+    redis.set game_number_key(@game_uuid), 20 # low numbers to start
+    redis.set game_max_number_key(@game_uuid), 20 # low numbers to start
+    redis.set game_entries_key(@game_uuid), 20 # low numbers to start
+    redis.lpush open_games_list_key, @game_uuid
+    redis.lpush running_games_list_key, @game_uuid
+    redis.lpush game_players_key(@game_uuid), player_uuid
+    puts "Finished making new game #{@game_uuid}"
   end
   def join_existing_game
-    result = redis.lpop open_games_list_key
-    if result
-      puts "player #{player_uuid} Joining existing game #{result}"
-      @game_uuid = result
-      result = redis.decr game_entries_key(game_uuid)
-      if result > 0
-        redis.lpush open_games_list_key, game_uuid
-        redis.lpush game_players_key(game_uuid), player_uuid
+    game_result = redis.lpop open_games_list_key
+    if game_result
+      puts "player #{player_uuid} Joining existing game #{game_result}"
+      @game_uuid = game_result
+      join_tickets = redis.decr game_entries_key(@game_uuid)
+      puts "Working with result - #{join_tickets} (game_uuid: #{@game_uuid})"
+      if join_tickets > 0
+        puts "puts DISP - stillopen"
+        puts "redis.lpush #{open_games_list_key} #{@game_uuid}"
+        redis.lpush open_games_list_key, @game_uuid
+        redis.lpush game_players_key(@game_uuid), player_uuid
       else
-        @game_uuid = false
+        puts "DISP - closed"
+        @game_uuid = "closed"
       end
     end
   end
   def response
     join_existing_game
-    make_new_game unless @game_uuid
+    make_new_game unless @game_uuid == "closed"
     [
       200,
       { "content-type" => "application/json" },

@@ -9,6 +9,7 @@ app = Proc.new do |env|
   uuid = SecureRandom.uuid
   name = request.params["name"]
   redis.set("player:name##{uuid}", name)
+  redis.set("player:medals##{uuid}", 0)
   redis.close
   [
     200,

@@ -14,8 +14,8 @@ def get_board
     lines << v[:boss_name]
     lines << " #{ v[:number] }/#{v[:maxnumber]}"
     lines << "</h1><ul>"
-    v[:players].each do |player_name|
-      lines << "<li>#{ player_name }</li>"
+    v[:players].each do |player|
+      lines << "<li>#{ player[:name] } - #{player[:medals]}</li>"
     end
     lines << "</ul></li>"
   end
@@ -28,7 +28,7 @@ app = Proc.new {
   [
     200,
     { "content-type" => "text/html" },
-    ["<html><body>#{ get_board }</body></html>"]
+    ["<html><head><meta http-equiv=\"refresh\" content=\"5\"></head><body>#{ get_board }</body></html>"]
   ]
 }
 run app

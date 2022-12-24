@@ -2,7 +2,7 @@
 version: '3.8'
 services:
   gameredis:
-    image: redis:7.0.5-alpine
+    image: redis:7.0.7-bullseye
     restart: always
     command: redis-server --save 20 1 --loglevel warning --requirepass gameredis_password
     environment: []

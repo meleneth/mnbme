@@ -32,20 +32,19 @@ loop do
   if game_uuid == "closed"
     response = gameservice.post("/game/join", URI.encode_www_form({player_uuid: player_uuid}))
     if response.success?
-      body = response.body
-      game_uuid = body[:game_uuid]
+      game_uuid = response.body[:game_uuid]
       puts "Joined game - #{ game_uuid }"
     else
       puts "Error joining game"
     end
   end
   if game_uuid != "closed"
-    puts "post /game/play #{game_uuid}"
+    #puts "post /game/play #{ game_uuid }"
     response = gameservice.post("/game/play", URI.encode_www_form({player_uuid: player_uuid, game_uuid: game_uuid}))
     body = response.body
     game_uuid = body[:game_uuid]
     number = body[:number]
-    puts "#{name}->tick(#{number}) for game # #{game_uuid}"
+    #puts "#{name}->tick(#{number}) for game # #{game_uuid}"
   else
     puts "Game was closed, did nothing"
   end

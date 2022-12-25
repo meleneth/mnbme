@@ -5,7 +5,9 @@ services:
     image: redis:7.0.7-bullseye
     restart: always
     command: redis-server --save 20 1 --loglevel warning --requirepass gameredis_password
-    environment: []
+    environment:
+    - NEW_RELIC_LICENSE_KEY
+    - NEW_RELIC_MONITOR_MODE
     ports:
     - 20000:6379
     volumes:
@@ -18,6 +20,7 @@ services:
     - REDIS_HOST=gameredis
     - REDIS_PORT=6379
     - REDIS_PASSWORD=gameredis_password
+    - NEW_RELIC_APP_NAME=accountservice
     build:
       context: "./accountservice"
     links:
@@ -32,6 +35,10 @@ services:
     - REDIS_HOST=gameredis
     - REDIS_PORT=6379
     - REDIS_PASSWORD=gameredis_password
+    - NEW_RELIC_LICENSE_KEY
+    - NEW_RELIC_MONITOR_MODE
+    - NEW_RELIC_LOG_LEVEL=debug
+    - NEW_RELIC_APP_NAME=gameservice
     build:
       context: "./gameservice"
     links:
@@ -50,6 +57,9 @@ services:
     - REDIS_HOST=gameredis
     - REDIS_PORT=6379
     - REDIS_PASSWORD=gameredis_password
+    - NEW_RELIC_LICENSE_KEY
+    - NEW_RELIC_MONITOR_MODE
+    - NEW_RELIC_APP_NAME=achievementservice
     build:
       context: "./achievementservice"
     links:
@@ -60,7 +70,9 @@ services:
     image: melen/bigboard
     ports:
     - 20400:9292
-    environment: []
+    environment:
+    - NEW_RELIC_LICENSE_KEY
+    - NEW_RELIC_MONITOR_MODE
     build:
       context: "./bigboard"
     links:
@@ -73,7 +85,10 @@ services:
     - achievementservice
   playerservice: &playerservice
     image: melen/playerservice
-    environment: []
+    environment:
+    - NEW_RELIC_LICENSE_KEY
+    - NEW_RELIC_MONITOR_MODE
+    - NEW_RELIC_APP_NAME=playerservice
     build:
       context: "./playerservice"
     links:

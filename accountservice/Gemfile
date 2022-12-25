@@ -9,3 +9,5 @@ gem "rack", "= 3.0.2"
 gem "rackup", "~> 0.2.2"
 
 gem "redis"
+
+gem 'newrelic_rpm'

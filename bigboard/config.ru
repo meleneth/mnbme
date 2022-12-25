@@ -1,5 +1,6 @@
 # config.ru
 require 'faraday'
+require 'newrelic_rpm'
 
 
 def get_board
@@ -7,20 +8,50 @@ def get_board
     f.response :json, parser_options: { symbolize_names: true }
   end
   response = gameservice.get("/game/list").body
+  loglines = []
+  loglines << "<ul>"
+  response[:logs].each do |log|
+    loglines << "<li>#{log}</li>"
+  end
+  loglines << "</ul>"
+
   lines = []
   lines << "<ul>"
-  response.each do |k, v|
-    lines << "<li><h1>"
-    lines << v[:boss_name]
-    lines << " #{ v[:number] }/#{v[:maxnumber]}"
-    lines << "</h1><ul>"
+  games = response[:games]
+  games.each do |k, v|
+    lines << "  <li><h1>#{ v[:boss_name]} #{ v[:number] }/#{v[:maxnumber]}</h1><ul>"
     v[:players].each do |player|
-      lines << "<li>#{ player[:name] } - #{player[:medals]}</li>"
+      lines << "    <li>#{ player[:name] } - #{player[:medals]}</li>"
     end
-    lines << "</ul></li>"
+    lines << "  </ul></li>"
   end
   lines << "</ul>"
-  return "<div><h1>BigBoard</h1><div>#{ lines.join("\n") }</div><p>and status</p></div>"
+
+  return <<BOARDHERE
+<h1>BigBoard</h1>
+<div>
+<div class="bigboard">
+  <div class="bigboard-child">#{loglines.join("\n")} </div>
+  <div class="bigboard-child">#{lines.join("\n")} </div>
+</div>
+</div>
+<p>and status</p>
+BOARDHERE
+end
+
+def bigboard_style
+  <<HERE
+.bigboard {
+  display: flex;
+}
+.bigboard-child {
+  flex: 1;
+  border: 2px solid yellow;
+}
+.bigboard-child:first-child {
+  margin-right: 20px;
+}
+HERE
 end
 
 app = Proc.new {
@@ -28,7 +59,7 @@ app = Proc.new {
   [
     200,
     { "content-type" => "text/html" },
-    ["<html><head><meta http-equiv=\"refresh\" content=\"5\"></head><body>#{ get_board }</body></html>"]
+    ["<html><head><meta http-equiv=\"refresh\" content=\"5\"><style>#{bigboard_style}</style></head><body>#{ get_board }</body></html>"]
   ]
 }
 run app

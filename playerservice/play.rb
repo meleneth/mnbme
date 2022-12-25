@@ -3,6 +3,7 @@
 require 'random_name_generator'
 require 'faraday'
 require 'json'
+require 'newrelic_rpm'
 
 def get_name
   rng = RandomNameGenerator.new(RandomNameGenerator::ELVEN)
@@ -33,7 +34,8 @@ loop do
     response = gameservice.post("/game/join", URI.encode_www_form({player_uuid: player_uuid}))
     if response.success?
       game_uuid = response.body[:game_uuid]
-      puts "Joined game - #{ game_uuid }"
+      game_name = response.body[:game_name]
+      puts "Joined game - #{ game_uuid } - #{ game_name }"
     else
       puts "Error joining game"
     end

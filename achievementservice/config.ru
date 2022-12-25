@@ -1,4 +1,6 @@
 # config.ru
+require 'newrelic_rpm'
+
 app = Proc.new {
   [
     200,

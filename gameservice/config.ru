@@ -3,6 +3,7 @@ require 'random_name_generator'
 require 'securerandom'
 require 'json'
 require 'redis'
+require 'newrelic_rpm'
 
 class MNBRedis
   attr_accessor :player_uuid
@@ -41,6 +42,7 @@ class MNBRedis
     health = redis.decr game_number_key
     if health == 0
       award_medal
+      game_log "#{player_name} has vanquished #{monster_name} and now has #{player_medals} medals"
       shutdown_game
     end
     health
@@ -83,12 +85,20 @@ class MNBRedis
   def make_new_game
     @game_uuid = SecureRandom.uuid
     redis.set game_name_key, monster_name
-    redis.set game_number_key, 2000 # low numbers to start
-    redis.set game_max_number_key, 2000 # low numbers to start
-    redis.set game_entries_key, 6 # low numbers to start
+    redis.set game_number_key, 100 # low numbers to start
+    redis.set game_max_number_key, 100 # low numbers to start
+    redis.set game_entries_key, 5 # low numbers to start
     redis.lpush open_games_list_key, game_uuid
     redis.lpush running_games_list_key, game_uuid
     redis.lpush game_players_key, player_uuid
+    game_log "#{ player_name } has discovered #{ monster_name }"
+  end
+  def game_log message
+    redis.lpush game_log_key, message
+    redis.ltrim game_log_key, 0, 99
+  end
+  def get_game_log
+    redis.lrange game_log_key, 0, -1
   end
   def running_games
     redis.lrange running_games_list_key, 0, -1
@@ -99,6 +109,9 @@ class MNBRedis
     "#{rng.compose(3)} #{rng.compose(3)} #{rng.compose(3)}"
   rescue
     retry # sigh
+  end
+  def game_log_key
+    'game:log'
   end
   def player_name_key
     "player:name##{ player_uuid }"
@@ -175,18 +188,21 @@ class ListRunningGames < ConnectedBase
   def response
     games = gamestore.running_games
     result = {}
+    result[:games] = {}
+    result[:logs] = gamestore.get_game_log
     games.each do |g|
       players_list = []
-      result[g] = {
+      gameinfo = {
         boss_name: '',
         number: 0,
         maxnumber: 0,
         players: players_list
       }
+      result[:games][g] = gameinfo
       gamestore.game_uuid = g
-      result[g][:boss_name] = gamestore.game_name
-      result[g][:number] = gamestore.game_number
-      result[g][:maxnumber] = gamestore.game_max_number
+      gameinfo[:boss_name] = gamestore.game_name
+      gameinfo[:number] = gamestore.game_number
+      gameinfo[:maxnumber] = gamestore.game_max_number
       players = gamestore.game_players
       players.each do |p|
         gamestore.player_uuid = p
@@ -208,7 +224,7 @@ class JoinGame < ConnectedBase
     [
       200,
       { "content-type" => "application/json" },
-      [ {game_uuid: gamestore.game_uuid}.to_json ]
+      [ { game_uuid: gamestore.game_uuid, game_name: gamestore.game_name }.to_json ]
     ]
   end
 end

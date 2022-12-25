@@ -2,6 +2,7 @@
 require 'securerandom'
 require 'json'
 require 'redis'
+require 'newrelic_rpm'
 
 app = Proc.new do |env|
   request = Rack::Request.new env

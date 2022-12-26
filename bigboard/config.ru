@@ -59,7 +59,7 @@ app = Proc.new {
   [
     200,
     { "content-type" => "text/html" },
-    ["<html><head><meta http-equiv=\"refresh\" content=\"5\"><style>#{bigboard_style}</style></head><body>#{ get_board }</body></html>"]
+    ["<html><head><meta http-equiv=\"refresh\" content=\"1\"><style>#{bigboard_style}</style></head><body>#{ get_board }</body></html>"]
   ]
 }
 run app

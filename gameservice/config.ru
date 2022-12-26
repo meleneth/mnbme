@@ -13,10 +13,13 @@ class MNBRedis
     @redis_used = true
     @redis ||= Redis.new(host: "gameredis", password: "gameredis_password")
   end
-  def close
-    if @redis_used
-      @redis.close
-      @redis_used = false
+  def cleanup_dead_games
+    running_games.each do |g|
+      @game_uuid = g
+      if not game_exists?
+        game_log "Sending in the janitor after #{game_uuid}"
+        cleanup_dead_game
+      end
     end
   end
   def add_game_to_open_list
@@ -27,6 +30,10 @@ class MNBRedis
   end
   def game_number
     redis.get game_number_key
+  end
+  def game_exists?
+    g = redis.exists game_number_key
+    g != 0
   end
   def game_max_number
     redis.get game_max_number_key
@@ -39,13 +46,24 @@ class MNBRedis
       @game_uuid = "closed"
       return 0
     end
-    health = redis.decr game_number_key
+    health = deal_a_savage_blow
+    refresh_game_expiration
     if health == 0
       award_medal
       game_log "#{player_name} has vanquished #{monster_name} and now has #{player_medals} medals"
       shutdown_game
     end
+    if health < 0
+      cleanup_dead_game
+      @game_uuid = "closed"
+    end
     health
+  end
+  def deal_a_savage_blow
+    redis.decr game_number_key
+  end
+  def refresh_game_expiration
+    redis.expire game_number_key, 10
   end
   def take_join_ticket
     redis.decr game_entries_key
@@ -74,7 +92,7 @@ class MNBRedis
     redis.get player_medals_key
   end
   def shutdown_game
-    redis.lrem running_games_list_key, -1, game_uuid
+    cleanup_dead_game
   end
   def first_open_game
     redis.lpop open_games_list_key
@@ -91,7 +109,13 @@ class MNBRedis
     redis.lpush open_games_list_key, game_uuid
     redis.lpush running_games_list_key, game_uuid
     redis.lpush game_players_key, player_uuid
+    redis.expire game_number_key, 10
     game_log "#{ player_name } has discovered #{ monster_name }"
+  end
+  def cleanup_dead_game
+    redis.del game_name_key, game_number_key, game_max_number_key, game_entries_key, game_players_key
+    redis.lrem running_games_list_key, -1, game_uuid
+    redis.lrem open_games_list_key, -1, game_uuid
   end
   def game_log message
     redis.lpush game_log_key, message
@@ -186,6 +210,7 @@ end
 
 class ListRunningGames < ConnectedBase
   def response
+    gamestore.cleanup_dead_games
     games = gamestore.running_games
     result = {}
     result[:games] = {}

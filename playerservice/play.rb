@@ -6,14 +6,14 @@ require 'faraday'
 require 'json'
 require 'newrelic_rpm'
 
-def get_name
+def generate_name
   rng = RandomNameGenerator.new(RandomNameGenerator::ELVEN)
   "#{rng.compose(3)} #{rng.compose(3)}"
 rescue StandardError
   retry # sigh
 end
 
-name = get_name
+name = generate_name
 
 accountservice = Faraday.new(url: 'http://accountservice:9292') do |f|
   f.response :json, parser_options: { symbolize_names: true }
@@ -46,7 +46,7 @@ loop do
     response = gameservice.post('/game/play', URI.encode_www_form({ player_uuid: player_uuid, game_uuid: game_uuid }))
     body = response.body
     game_uuid = body[:game_uuid]
-    number = body[:number]
+    # number = body[:number]
     # puts "#{name}->tick(#{number}) for game # #{game_uuid}"
   else
     puts 'Game was closed, did nothing'

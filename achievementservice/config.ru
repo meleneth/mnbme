@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 # config.ru
 require 'newrelic_rpm'
 
-app = Proc.new {
+app = proc do
   [
     200,
-    { "content-type" => "text/html" },
-    ["Hello, Rack"]
+    { 'content-type' => 'text/html' },
+    ['Hello, Rack']
   ]
-}
+end
 run app

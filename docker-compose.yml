@@ -41,7 +41,8 @@ services:
     - NEW_RELIC_LOG_LEVEL=debug
     - NEW_RELIC_APP_NAME=gameservice
     build:
-      context: "./gameservice"
+      context: "./"
+      dockerfile: "./gameservice/Dockerfile"
     links:
     - gameredis
     - accountservice

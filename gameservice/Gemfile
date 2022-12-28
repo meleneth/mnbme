@@ -13,3 +13,5 @@ gem 'redis'
 gem 'random_name_generator'
 
 gem 'newrelic_rpm'
+
+gem "mel-mnbme"

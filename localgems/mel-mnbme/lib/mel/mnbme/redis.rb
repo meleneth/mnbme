@@ -1,5 +1,4 @@
-require_relative "redis_keys"
-require_relative "game_management"
+# frozen_string_literal: true
 
 module Mel
   module MNBME

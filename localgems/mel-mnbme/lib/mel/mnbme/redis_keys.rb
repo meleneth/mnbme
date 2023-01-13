@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mel
   module MNBME
     # Base class for redis interface - generate key names via game_uuid and player_uuid
